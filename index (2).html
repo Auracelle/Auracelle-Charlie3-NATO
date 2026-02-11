@@ -1,0 +1,1838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auracelle Charlie 3 - War Gaming Simulation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0f1419;
+            color: #e8eaed;
+            overflow-x: hidden;
+        }
+
+        .simulation-container {
+            display: grid;
+            grid-template-rows: 70px 1fr;
+            height: 100vh;
+            background: linear-gradient(135deg, #0f1419 0%, #1a1f2e 100%);
+        }
+
+        .header-bar {
+            background: linear-gradient(180deg, #1e2530 0%, #161b24 100%);
+            border-bottom: 2px solid #2d3748;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+            z-index: 100;
+        }
+
+        .platform-title {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .platform-icon {
+            font-size: 2rem;
+        }
+
+        .title-text h1 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #00d4ff;
+            line-height: 1.2;
+        }
+
+        .title-text p {
+            font-size: 0.8rem;
+            color: #9ca3af;
+            margin-top: 2px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .scenario-badge {
+            padding: 8px 16px;
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid #00d4ff;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            color: #00d4ff;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .scenario-badge:hover {
+            background: rgba(0, 212, 255, 0.2);
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid #10b981;
+            border-radius: 6px;
+            font-size: 0.85rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            animation: pulse-dot 2s infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; box-shadow: 0 0 8px #10b981; }
+            50% { opacity: 0.6; box-shadow: 0 0 4px #10b981; }
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0;
+            overflow: visible;
+            height: auto;
+        }
+
+        .config-panel {
+            background: #161b24;
+            border-right: 1px solid #2d3748;
+            overflow-y: auto;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.3);
+        }
+
+        .config-section {
+            border-bottom: 1px solid #2d3748;
+            padding: 24px;
+        }
+
+        .section-header {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #00d4ff;
+            margin-bottom: 18px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .scenario-card {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.08) 0%, rgba(0, 123, 255, 0.04) 100%);
+            border: 2px solid #00d4ff;
+            border-radius: 12px;
+            padding: 18px;
+            margin-bottom: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .scenario-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 212, 255, 0.2);
+        }
+
+        .scenario-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #e8eaed;
+            margin-bottom: 8px;
+            line-height: 1.3;
+        }
+
+        .scenario-subtitle {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-bottom: 10px;
+        }
+
+        .scenario-brief {
+            font-size: 0.8rem;
+            color: #9ca3af;
+            line-height: 1.5;
+        }
+
+        .change-scenario-btn {
+            width: 100%;
+            padding: 10px;
+            background: #0f1419;
+            border: 1px solid #374151;
+            border-radius: 6px;
+            color: #00d4ff;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .change-scenario-btn:hover {
+            border-color: #00d4ff;
+            background: rgba(0, 212, 255, 0.1);
+        }
+
+        .country-selector {
+            background: #0f1419;
+            border: 1px solid #374151;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .country-selector:hover {
+            border-color: #00d4ff;
+        }
+
+        .country-label {
+            font-size: 0.75rem;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 10px;
+        }
+
+        .country-display {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .country-flag {
+            font-size: 2rem;
+        }
+
+        .country-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #e8eaed;
+        }
+
+        .role-selector {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .role-label {
+            font-size: 0.75rem;
+            color: #9ca3af;
+        }
+
+        .role-badge {
+            padding: 6px 12px;
+            background: rgba(0, 212, 255, 0.15);
+            border: 1px solid #00d4ff;
+            border-radius: 6px;
+            color: #00d4ff;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .player-indicator {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.1) 100%);
+            border: 2px solid #10b981;
+            border-radius: 8px;
+            padding: 14px;
+            margin-top: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .player-icon {
+            font-size: 1.5rem;
+        }
+
+        .player-text {
+            font-size: 0.85rem;
+            color: #10b981;
+            font-weight: 600;
+        }
+
+        /* CENTER PANEL - SIMULATION FLOW */
+        .simulation-display {
+            background: #0f1419;
+            overflow-y: auto;
+            padding: 30px;
+        }
+
+        .round-display {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.1) 0%, rgba(0, 123, 255, 0.05) 100%);
+            border: 2px solid #00d4ff;
+            border-radius: 12px;
+            padding: 28px;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .round-label-top {
+            font-size: 0.85rem;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 12px;
+        }
+
+        .round-number {
+            font-size: 4.5rem;
+            font-weight: 700;
+            color: #00d4ff;
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+
+        .round-label-bottom {
+            font-size: 0.85rem;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .control-panel {
+            background: #161b24;
+            border: 1px solid #2d3748;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .slider-control {
+            margin-bottom: 20px;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 0.85rem;
+            color: #e8eaed;
+        }
+
+        .slider-value {
+            background: rgba(0, 212, 255, 0.15);
+            padding: 4px 10px;
+            border-radius: 4px;
+            color: #00d4ff;
+            font-weight: 600;
+        }
+
+        .slider-input {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: #0f1419;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .slider-input::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #00d4ff;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+        }
+
+        .slider-input::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #00d4ff;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+        }
+
+        .toggle-control {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px;
+            background: #0f1419;
+            border: 1px solid #374151;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .toggle-control:hover {
+            border-color: #00d4ff;
+            background: rgba(0, 212, 255, 0.05);
+        }
+
+        .toggle-label {
+            font-size: 0.85rem;
+            color: #e8eaed;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            background: #374151;
+            border-radius: 12px;
+            transition: all 0.3s;
+        }
+
+        .toggle-switch.active {
+            background: #10b981;
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 18px;
+            height: 18px;
+            background: white;
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+
+        .toggle-switch.active::after {
+            left: 23px;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .nav-btn {
+            flex: 1;
+            padding: 14px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .nav-btn.primary {
+            background: linear-gradient(135deg, #00d4ff 0%, #0080ff 100%);
+            border: 2px solid #00d4ff;
+            color: white;
+        }
+
+        .nav-btn.primary:hover {
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .nav-btn.danger {
+            background: #0f1419;
+            border: 2px solid #ef4444;
+            color: #ef4444;
+        }
+
+        .nav-btn.danger:hover {
+            background: rgba(239, 68, 68, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .outcomes-panel {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.03) 0%, rgba(0, 123, 255, 0.01) 100%);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .outcomes-header {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #00d4ff;
+            margin-bottom: 20px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        .metric-card {
+            background: #161b24;
+            border: 1px solid #2d3748;
+            border-radius: 10px;
+            padding: 18px;
+            position: relative;
+            overflow: visible;
+            transition: all 0.3s;
+        }
+
+        .metric-card:hover {
+            border-color: #00d4ff;
+            transform: translateY(-2px);
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #00d4ff, #0080ff);
+        }
+
+        .metric-icon {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+
+        .metric-value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #e8eaed;
+            line-height: 1;
+            margin-bottom: 6px;
+        }
+
+        .metric-value.reward {
+            color: #10b981;
+        }
+
+        .metric-value.risk {
+            color: #ef4444;
+        }
+
+        .metric-label {
+            font-size: 0.8rem;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .metric-progress {
+            margin-top: 10px;
+            height: 6px;
+            background: #0f1419;
+            border-radius: 3px;
+            overflow: visible;
+        }
+
+        .metric-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #00d4ff, #0080ff);
+            border-radius: 3px;
+            transition: width 0.5s ease;
+        }
+
+        .shock-alert {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(220, 38, 38, 0.1) 100%);
+            border: 2px solid #ef4444;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+            animation: pulse-alert 2s infinite;
+        }
+
+        @keyframes pulse-alert {
+            0%, 100% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.3); }
+            50% { box-shadow: 0 0 30px rgba(239, 68, 68, 0.5); }
+        }
+
+        .shock-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #ef4444;
+            margin-bottom: 12px;
+        }
+
+        .shock-content {
+            font-size: 0.9rem;
+            color: #e8eaed;
+            line-height: 1.6;
+        }
+
+        .adjudicator-panel {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.05) 0%, rgba(0, 123, 255, 0.02) 100%);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .adjudicator-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: #00d4ff;
+        }
+
+        .adjudicator-metrics {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+
+        .adj-metric {
+            text-align: center;
+        }
+
+        .adj-metric-icon {
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+        }
+
+        .adj-metric-value {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #e8eaed;
+            margin-bottom: 4px;
+        }
+
+        .adj-metric-label {
+            font-size: 0.75rem;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .deception-panel {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.05) 0%, rgba(185, 28, 28, 0.02) 100%);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .deception-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: #ef4444;
+        }
+
+        .deception-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .deception-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px;
+            background: #161b24;
+            border: 1px solid #2d3748;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .deception-item:hover {
+            border-color: #ef4444;
+        }
+
+        .deception-actor {
+            font-size: 0.9rem;
+            color: #e8eaed;
+            font-weight: 600;
+        }
+
+        .deception-risk {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .risk-bar {
+            width: 100px;
+            height: 8px;
+            background: #0f1419;
+            border-radius: 4px;
+            overflow: visible;
+        }
+
+        .risk-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #fbbf24, #ef4444);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        .risk-percentage {
+            font-size: 0.85rem;
+            color: #9ca3af;
+            min-width: 45px;
+            text-align: right;
+        }
+
+        .status-indicator {
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-indicator.safe {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+        }
+
+        .status-indicator.suspicious {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+        }
+
+        .analysis-panel {
+            background: #161b24;
+            border-left: 1px solid #2d3748;
+            overflow-y: auto;
+            box-shadow: -2px 0 10px rgba(0,0,0,0.3);
+            padding: 24px;
+        }
+
+        .analysis-section {
+            margin-bottom: 28px;
+            padding-bottom: 28px;
+            border-bottom: 1px solid #2d3748;
+        }
+
+        .analysis-section:last-child {
+            border-bottom: none;
+        }
+
+        .analysis-header {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #e8eaed;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        .comparison-table th {
+            background: #0f1419;
+            padding: 12px;
+            text-align: left;
+            font-size: 0.8rem;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 2px solid #2d3748;
+        }
+
+        .comparison-table td {
+            padding: 12px;
+            font-size: 0.85rem;
+            color: #e8eaed;
+            border-bottom: 1px solid #2d3748;
+        }
+
+        .comparison-table tr:hover td {
+            background: rgba(0, 212, 255, 0.05);
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-left: 24px;
+            margin-bottom: 16px;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 6px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #00d4ff;
+            box-shadow: 0 0 8px rgba(0, 212, 255, 0.5);
+        }
+
+        .timeline-item::after {
+            content: '';
+            position: absolute;
+            left: 5.5px;
+            top: 18px;
+            width: 1px;
+            height: calc(100% + 4px);
+            background: #2d3748;
+        }
+
+        .timeline-item:last-child::after {
+            display: none;
+        }
+
+        .timeline-round {
+            font-size: 0.75rem;
+            color: #9ca3af;
+            margin-bottom: 4px;
+        }
+
+        .timeline-content {
+            font-size: 0.85rem;
+            color: #e8eaed;
+            line-height: 1.5;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .stat-item {
+            background: #0f1419;
+            border: 1px solid #2d3748;
+            border-radius: 8px;
+            padding: 12px;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: #9ca3af;
+            margin-bottom: 6px;
+        }
+
+        .stat-value {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #00d4ff;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #161b24;
+            border: 2px solid #2d3748;
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: none;
+            border: none;
+            color: #9ca3af;
+            font-size: 2rem;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .close-modal:hover {
+            color: #ef4444;
+            transform: rotate(90deg);
+        }
+
+        .modal-header {
+            margin-bottom: 24px;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            color: #00d4ff;
+            margin-bottom: 8px;
+        }
+
+        .modal-subtitle {
+            font-size: 0.9rem;
+            color: #9ca3af;
+        }
+
+        .scenario-grid {
+            display: grid;
+            gap: 16px;
+        }
+
+        .scenario-option {
+            background: #0f1419;
+            border: 2px solid #2d3748;
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .scenario-option:hover,
+        .scenario-option.selected {
+            border-color: #00d4ff;
+            background: rgba(0, 212, 255, 0.05);
+        }
+
+        .scenario-option-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #e8eaed;
+            margin-bottom: 8px;
+        }
+
+        .scenario-option-desc {
+            font-size: 0.85rem;
+            color: #9ca3af;
+            line-height: 1.5;
+        }
+
+        .country-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .country-option {
+            background: #0f1419;
+            border: 2px solid #2d3748;
+            border-radius: 8px;
+            padding: 16px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .country-option:hover,
+        .country-option.selected {
+            border-color: #00d4ff;
+            background: rgba(0, 212, 255, 0.05);
+        }
+
+        .country-option-flag {
+            font-size: 2.5rem;
+            margin-bottom: 8px;
+        }
+
+        .country-option-name {
+            font-size: 0.85rem;
+            color: #e8eaed;
+            font-weight: 600;
+        }
+
+        .role-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .role-option {
+            background: #0f1419;
+            border: 1px solid #2d3748;
+            border-radius: 6px;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 0.8rem;
+            color: #9ca3af;
+            transition: all 0.2s;
+        }
+
+        .role-option:hover,
+        .role-option.selected {
+            border-color: #00d4ff;
+            background: rgba(0, 212, 255, 0.1);
+            color: #00d4ff;
+        }
+
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0f1419;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #2d3748;
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #374151;
+        }
+    </style>
+</head>
+<body>
+    <div class="simulation-container">
+        <div class="header-bar">
+            <div class="platform-title">
+                <div class="platform-icon">🎮</div>
+                <div class="title-text">
+                    <h1>Auracelle Charlie 3</h1>
+                    <p>War Gaming Stress-Testing Simulation</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <div class="scenario-badge" onclick="openScenarioModal()">
+                    <span id="currentScenario">EU AI Act</span>
+                </div>
+                <div class="status-badge">
+                    <div class="status-dot"></div>
+                    <span>Simulation Active</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- Left Panel - Scenario Configuration -->
+            <div class="config-panel">
+                <div class="config-section">
+                    <div class="section-header">
+                        <span>📋</span>
+                        <span>Policy Scenario</span>
+                    </div>
+                    <div class="scenario-card">
+                        <div class="scenario-title">EU Artificial Intelligence Act (AI Act)</div>
+                        <div class="scenario-subtitle">Regulation (EU) 2024/1689</div>
+                        <div class="scenario-brief">
+                            Risk-tiering, high-risk controls, governance obligations—perfect for stress-testing compliance, innovation tradeoffs, and cross-border adoption.
+                        </div>
+                    </div>
+                    <button class="change-scenario-btn" onclick="openScenarioModal()">
+                        Change Scenario
+                    </button>
+                </div>
+
+                <div class="config-section">
+                    <div class="section-header">
+                        <span>🌍</span>
+                        <span>Country A</span>
+                    </div>
+                    <div class="country-selector" onclick="openCountryModal('A')">
+                        <div class="country-label">Selected Country</div>
+                        <div class="country-display">
+                            <div class="country-flag" id="countryAFlag">🇦🇪</div>
+                            <div class="country-name" id="countryAName">Dubai</div>
+                        </div>
+                        <div class="role-selector">
+                            <div class="role-label">Role:</div>
+                            <div class="role-badge" id="countryARole">Governance</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="config-section">
+                    <div class="section-header">
+                        <span>🌍</span>
+                        <span>Country B</span>
+                    </div>
+                    <div class="country-selector" onclick="openCountryModal('B')">
+                        <div class="country-label">Selected Country</div>
+                        <div class="country-display">
+                            <div class="country-flag" id="countryBFlag">🇬🇧</div>
+                            <div class="country-name" id="countryBName">United Kingdom</div>
+                        </div>
+                        <div class="role-selector">
+                            <div class="role-label">Role:</div>
+                            <div class="role-badge" id="countryBRole">Governance</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="config-section">
+                    <div class="section-header">
+                        <span>🎖️</span>
+                        <span>Your Role</span>
+                    </div>
+                    <div class="player-indicator">
+                        <div class="player-icon">👤</div>
+                        <div>
+                            <div style="font-size: 0.75rem; color: #9ca3af; margin-bottom: 4px;">You represent:</div>
+                            <div class="player-text" id="playerCountry">Dubai</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Center Panel - SIMULATION FLOW -->
+            <div class="simulation-display">
+                <!-- 1. SIMULATION CONTROL -->
+                <div class="round-display">
+                    <div class="round-label-top">Current Round</div>
+                    <div class="round-number" id="roundNumber">1</div>
+                    <div class="round-label-bottom">Round</div>
+                </div>
+
+                <div class="control-panel">
+                    <div class="section-header">
+                        <span>⚙️</span>
+                        <span>Episode Settings</span>
+                    </div>
+
+                    <div class="slider-control">
+                        <div class="slider-label">
+                            <span>Episode Length</span>
+                            <span class="slider-value" id="episodeLengthValue">5 rounds</span>
+                        </div>
+                        <input type="range" class="slider-input" id="episodeLength" min="1" max="30" value="5">
+                    </div>
+
+                    <div class="toggle-control" onclick="toggleStochastic()">
+                        <span class="toggle-label">Stochastic Exploration</span>
+                        <div class="toggle-switch" id="stochasticToggle"></div>
+                    </div>
+                </div>
+
+                <div class="control-panel" style="border: 2px solid #00d4ff;">
+                    <div class="section-header">
+                        <span>🎮</span>
+                        <span>Controls</span>
+                    </div>
+                    <div class="nav-buttons">
+                        <button class="nav-btn primary" onclick="nextRound()">
+                            <span>▶️</span>
+                            <span>Next Round</span>
+                        </button>
+                        <button class="nav-btn danger" onclick="resetEpisode()">
+                            <span>🔄</span>
+                            <span>Reset</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 2. SIMULATION OUTCOMES -->
+                <div class="outcomes-panel">
+                    <div class="outcomes-header">
+                        <span>📊</span>
+                        <span>Round Outcomes</span>
+                    </div>
+
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="metric-icon">🏆</div>
+                            <div class="metric-value reward" id="rewardValue">29.0</div>
+                            <div class="metric-label">Reward</div>
+                            <div class="metric-progress">
+                                <div class="metric-progress-bar" id="rewardBar" style="width: 29%"></div>
+                            </div>
+                        </div>
+
+                        <div class="metric-card">
+                            <div class="metric-icon">⚠️</div>
+                            <div class="metric-value risk" id="riskValue">50.0</div>
+                            <div class="metric-label">Risk</div>
+                            <div class="metric-progress">
+                                <div class="metric-progress-bar" id="riskBar" style="width: 50%; background: linear-gradient(90deg, #fbbf24, #ef4444);"></div>
+                            </div>
+                        </div>
+
+                        <div class="metric-card">
+                            <div class="metric-icon">📏</div>
+                            <div class="metric-value" id="episodeProgress">1/5</div>
+                            <div class="metric-label">Episode Progress</div>
+                            <div class="metric-progress">
+                                <div class="metric-progress-bar" id="episodeBar" style="width: 20%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. SHOCK EVENTS -->
+                <div class="shock-alert" id="shockAlert" style="display: none;">
+                    <div class="shock-header">
+                        <span>💥</span>
+                        <span id="shockTitle">EXTERNAL SHOCK</span>
+                    </div>
+                    <div class="shock-content" id="shockContent">
+                        Unexpected geopolitical development detected.
+                    </div>
+                </div>
+
+                <!-- 4. AI ADJUDICATOR -->
+                <div class="adjudicator-panel">
+                    <div class="adjudicator-header">
+                        <span>🤖</span>
+                        <span>AI Agentic Adjudicator Status</span>
+                    </div>
+                    <div class="adjudicator-metrics">
+                        <div class="adj-metric">
+                            <div class="adj-metric-icon" id="tensionIcon">🟢</div>
+                            <div class="adj-metric-value" id="tensionValue">38.5%</div>
+                            <div class="adj-metric-label">Tension</div>
+                        </div>
+                        <div class="adj-metric">
+                            <div class="adj-metric-icon">🎲</div>
+                            <div class="adj-metric-value" id="confidenceValue">88.5%</div>
+                            <div class="adj-metric-label">Confidence</div>
+                        </div>
+                        <div class="adj-metric">
+                            <div class="adj-metric-icon">📊</div>
+                            <div class="adj-metric-value" id="alignmentValue">0%</div>
+                            <div class="adj-metric-label">Alignment</div>
+                        </div>
+                        <div class="adj-metric">
+                            <div class="adj-metric-icon">✅</div>
+                            <div class="adj-metric-value">Active</div>
+                            <div class="adj-metric-label">Real Data</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. DECEPTION DETECTION -->
+                <div class="deception-panel">
+                    <div class="deception-header">
+                        <span>🎭</span>
+                        <span>Deception Detection</span>
+                    </div>
+                    <div class="deception-list">
+                        <div class="deception-item">
+                            <div class="deception-actor"><span id="deceptionCountryA">🇦🇪 Dubai</span></div>
+                            <div class="deception-risk">
+                                <div class="risk-bar">
+                                    <div class="risk-bar-fill" id="deceptionBarA" style="width: 22%"></div>
+                                </div>
+                                <div class="risk-percentage" id="deceptionPercentA">22.0%</div>
+                                <div class="status-indicator safe" id="deceptionStatusA">✅ Consistent</div>
+                            </div>
+                        </div>
+                        <div class="deception-item">
+                            <div class="deception-actor"><span id="deceptionCountryB">🇬🇧 United Kingdom</span></div>
+                            <div class="deception-risk">
+                                <div class="risk-bar">
+                                    <div class="risk-bar-fill" id="deceptionBarB" style="width: 35%"></div>
+                                </div>
+                                <div class="risk-percentage" id="deceptionPercentB">35.0%</div>
+                                <div class="status-indicator safe" id="deceptionStatusB">✅ Consistent</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel - Round History & Analysis -->
+            <div class="analysis-panel">
+                <div class="analysis-section">
+                    <div class="analysis-header">
+                        <span>🆚</span>
+                        <span>Country Comparison</span>
+                    </div>
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Metric</th>
+                                <th id="comparisonHeaderA">Dubai</th>
+                                <th id="comparisonHeaderB">UK</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>GDP (Trillion USD)</td>
+                                <td id="gdpA">$0.51T</td>
+                                <td id="gdpB">$3.34T</td>
+                            </tr>
+                            <tr>
+                                <td>Military Exp (% GDP)</td>
+                                <td id="milA">5.7%</td>
+                                <td id="milB">2.3%</td>
+                            </tr>
+                            <tr>
+                                <td>Internet Penetration</td>
+                                <td id="internetA">99.0%</td>
+                                <td id="internetB">96.6%</td>
+                            </tr>
+                            <tr>
+                                <td>Influence Score</td>
+                                <td id="influenceA">7.2</td>
+                                <td id="influenceB">8.9</td>
+                            </tr>
+                            <tr>
+                                <td>Policy Position</td>
+                                <td id="positionA">Moderate</td>
+                                <td id="positionB">Restrictive</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="analysis-section">
+                    <div class="analysis-header">
+                        <span>📈</span>
+                        <span>Round History</span>
+                    </div>
+                    <div id="roundTimeline">
+                        <div class="timeline-item">
+                            <div class="timeline-round">Round 1</div>
+                            <div class="timeline-content">
+                                Initial policy positions established. Moderate tension between Dubai's governance approach and UK's regulatory framework.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="analysis-section">
+                    <div class="analysis-header">
+                        <span>🎯</span>
+                        <span>Strategic Assessment</span>
+                    </div>
+                    <div style="font-size: 0.85rem; color: #9ca3af; line-height: 1.6;">
+                        <p style="margin-bottom: 12px;">
+                            <strong style="color: #00d4ff;">Current Scenario:</strong>
+                            EU AI Act implementation requires balancing innovation incentives with comprehensive risk management frameworks.
+                        </p>
+                        <p style="margin-bottom: 12px;">
+                            <strong style="color: #00d4ff;">Position Analysis:</strong>
+                            Dubai's governance-focused approach contrasts with UK's emphasis on regulatory alignment. Potential for collaborative standard-setting.
+                        </p>
+                        <p>
+                            <strong style="color: #00d4ff;">Recommendation:</strong>
+                            Explore tiered compliance mechanisms that accommodate different implementation capacities while maintaining core safety standards.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="analysis-section">
+                    <div class="analysis-header">
+                        <span>📊</span>
+                        <span>Session Statistics</span>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-label">Avg Reward</div>
+                            <div class="stat-value" id="avgReward">29.0</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Avg Risk</div>
+                            <div class="stat-value" id="avgRisk">50.0</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Rounds Played</div>
+                            <div class="stat-value" id="roundsPlayed">1</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Shocks</div>
+                            <div class="stat-value" id="shocksTriggered">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scenario Selection Modal -->
+    <div class="modal" id="scenarioModal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeScenarioModal()">×</button>
+            <div class="modal-header">
+                <h2 class="modal-title">Select Policy Scenario</h2>
+                <p class="modal-subtitle">Choose the governance framework to stress-test</p>
+            </div>
+            <div class="scenario-grid">
+                <div class="scenario-option selected" onclick="selectScenario(this, 'EU AI Act', 'EU Artificial Intelligence Act (AI Act)', 'Regulation (EU) 2024/1689', 'Risk-tiering, high-risk controls, governance obligations—perfect for stress-testing compliance, innovation tradeoffs, and cross-border adoption.')">
+                    <div class="scenario-option-title">EU Artificial Intelligence Act (AI Act)</div>
+                    <div class="scenario-option-desc">Regulation (EU) 2024/1689 • Risk-tiering, high-risk controls, governance obligations</div>
+                </div>
+                <div class="scenario-option" onclick="selectScenario(this, 'US Executive Order', 'US Executive Order on Safe AI', 'EO 14110 (Oct 2023)', 'Federal AI governance, safety standards, and international coordination frameworks.')">
+                    <div class="scenario-option-title">US Executive Order on Safe AI</div>
+                    <div class="scenario-option-desc">EO 14110 (Oct 2023) • Federal standards, safety testing, international cooperation</div>
+                </div>
+                <div class="scenario-option" onclick="selectScenario(this, 'UK AI Regulation', 'UK Pro-Innovation AI Regulation', 'White Paper Framework', 'Principles-based approach emphasizing sector-specific regulation and innovation enablement.')">
+                    <div class="scenario-option-title">UK Pro-Innovation AI Regulation</div>
+                    <div class="scenario-option-desc">White Paper Framework • Principles-based, sector-specific approach</div>
+                </div>
+                <div class="scenario-option" onclick="selectScenario(this, 'China AI Governance', 'China Generative AI Measures', 'CAC Regulations 2023', 'State oversight, content controls, algorithm registration, and national security focus.')">
+                    <div class="scenario-option-title">China Generative AI Measures</div>
+                    <div class="scenario-option-desc">CAC Regulations 2023 • Algorithm governance, content regulation</div>
+                </div>
+                <div class="scenario-option" onclick="selectScenario(this, 'OECD AI Principles', 'OECD AI Principles', 'May 2019 Framework', 'International consensus on responsible AI stewardship and human-centric values.')">
+                    <div class="scenario-option-title">OECD AI Principles</div>
+                    <div class="scenario-option-desc">May 2019 Framework • International consensus, values-based approach</div>
+                </div>
+                <div class="scenario-option" onclick="selectScenario(this, 'Bletchley Declaration', 'Bletchley Declaration', 'UK AI Safety Summit 2023', 'International cooperation on frontier AI risks and safety research coordination.')">
+                    <div class="scenario-option-title">Bletchley Declaration</div>
+                    <div class="scenario-option-desc">UK AI Safety Summit 2023 • Frontier AI risks, international cooperation</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Country Selection Modal -->
+    <div class="modal" id="countryModal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeCountryModal()">×</button>
+            <div class="modal-header">
+                <h2 class="modal-title">Select Country <span id="countrySlot"></span></h2>
+                <p class="modal-subtitle">Choose actor and assign strategic role</p>
+            </div>
+
+            <div style="margin-bottom: 24px;">
+                <div style="font-size: 0.85rem; color: #9ca3af; margin-bottom: 12px;">Select Country:</div>
+                <div class="country-grid" id="countryGrid">
+                    <!-- Countries populated by JavaScript -->
+                </div>
+            </div>
+
+            <div>
+                <div style="font-size: 0.85rem; color: #9ca3af; margin-bottom: 12px;">Assign Role:</div>
+                <div class="role-grid" id="roleGrid">
+                    <div class="role-option" onclick="selectRole(this, 'Governance')">Governance</div>
+                    <div class="role-option" onclick="selectRole(this, 'MilitaryAI')">Military AI</div>
+                    <div class="role-option" onclick="selectRole(this, 'DataPrivacy')">Data Privacy</div>
+                    <div class="role-option" onclick="selectRole(this, 'ExportControl')">Export Control</div>
+                    <div class="role-option" onclick="selectRole(this, 'Diplomacy')">Diplomacy</div>
+                    <div class="role-option" onclick="selectRole(this, 'StandardSetting')">Standard Setting</div>
+                    <div class="role-option" onclick="selectRole(this, 'Surveillance')">Surveillance</div>
+                    <div class="role-option" onclick="selectRole(this, 'Trade')">Trade</div>
+                    <div class="role-option" onclick="selectRole(this, 'TechAlliance')">Tech Alliance</div>
+                </div>
+            </div>
+
+            <div style="margin-top: 24px; display: flex; gap: 12px;">
+                <button class="nav-btn" onclick="closeCountryModal()" style="flex: 1; border: 2px solid #374151; background: #0f1419; color: #e8eaed;">Cancel</button>
+                <button class="nav-btn primary" onclick="confirmCountrySelection()" style="flex: 1;">Confirm Selection</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== STATE MANAGEMENT =====
+        let state = {
+            round: 1,
+            episodeLength: 5,
+            stochastic: false,
+            reward: 29.0,
+            risk: 50.0,
+            tension: 38.5,
+            confidence: 88.5,
+            alignment: 0,
+            history: [],
+            shocksTriggered: 0,
+            scenario: {
+                short: 'EU AI Act',
+                title: 'EU Artificial Intelligence Act (AI Act)',
+                subtitle: 'Regulation (EU) 2024/1689',
+                brief: 'Risk-tiering, high-risk controls, governance obligations—perfect for stress-testing compliance, innovation tradeoffs, and cross-border adoption.'
+            },
+            countryA: {
+                name: 'Dubai',
+                flag: '🇦🇪',
+                role: 'Governance',
+                gdp: 0.51,
+                mil: 5.7,
+                internet: 99.0,
+                influence: 7.2,
+                position: 'Moderate'
+            },
+            countryB: {
+                name: 'United Kingdom',
+                flag: '🇬🇧',
+                role: 'Governance',
+                gdp: 3.34,
+                mil: 2.3,
+                internet: 96.6,
+                influence: 8.9,
+                position: 'Restrictive'
+            },
+            player: 'A',
+            currentModalSlot: null,
+            tempCountry: null,
+            tempRole: 'Governance'
+        };
+
+        const countries = [
+            { name: 'United States', flag: '🇺🇸', gdp: 27.36, mil: 3.4, internet: 91.8, influence: 9.8, position: 'Moderate' },
+            { name: 'China', flag: '🇨🇳', gdp: 17.89, mil: 1.7, internet: 73.7, influence: 9.5, position: 'Restrictive' },
+            { name: 'European Union', flag: '🇪🇺', gdp: 16.64, mil: 1.5, internet: 89.7, influence: 9.2, position: 'Restrictive' },
+            { name: 'United Kingdom', flag: '🇬🇧', gdp: 3.34, mil: 2.3, internet: 96.6, influence: 8.9, position: 'Restrictive' },
+            { name: 'India', flag: '🇮🇳', gdp: 3.73, mil: 2.4, internet: 54.4, influence: 8.5, position: 'Permissive' },
+            { name: 'Japan', flag: '🇯🇵', gdp: 4.21, mil: 1.1, internet: 93.8, influence: 8.7, position: 'Moderate' },
+            { name: 'Germany', flag: '🇩🇪', gdp: 4.31, mil: 1.5, internet: 91.0, influence: 8.8, position: 'Restrictive' },
+            { name: 'France', flag: '🇫🇷', gdp: 3.05, mil: 1.9, internet: 85.5, influence: 8.6, position: 'Moderate' },
+            { name: 'Canada', flag: '🇨🇦', gdp: 2.14, mil: 1.3, internet: 92.7, influence: 8.3, position: 'Moderate' },
+            { name: 'South Korea', flag: '🇰🇷', gdp: 1.71, mil: 2.8, internet: 97.2, influence: 8.4, position: 'Moderate' },
+            { name: 'Australia', flag: '🇦🇺', gdp: 1.69, mil: 2.0, internet: 89.6, influence: 8.1, position: 'Moderate' },
+            { name: 'Brazil', flag: '🇧🇷', gdp: 2.17, mil: 1.1, internet: 81.3, influence: 7.8, position: 'Permissive' },
+            { name: 'Israel', flag: '🇮🇱', gdp: 0.52, mil: 4.5, internet: 88.9, influence: 7.9, position: 'Moderate' },
+            { name: 'Singapore', flag: '🇸🇬', gdp: 0.52, mil: 3.2, internet: 92.0, influence: 7.7, position: 'Permissive' },
+            { name: 'Dubai', flag: '🇦🇪', gdp: 0.51, mil: 5.7, internet: 99.0, influence: 7.2, position: 'Moderate' },
+            { name: 'Saudi Arabia', flag: '🇸🇦', gdp: 1.11, mil: 7.4, internet: 99.0, influence: 7.5, position: 'Restrictive' },
+            { name: 'Russia', flag: '🇷🇺', gdp: 2.24, mil: 4.1, internet: 88.2, influence: 8.0, position: 'Restrictive' },
+            { name: 'Turkey', flag: '🇹🇷', gdp: 1.03, mil: 1.3, internet: 82.6, influence: 7.3, position: 'Moderate' },
+            { name: 'Mexico', flag: '🇲🇽', gdp: 1.81, mil: 0.5, internet: 75.5, influence: 7.4, position: 'Permissive' },
+            { name: 'Indonesia', flag: '🇮🇩', gdp: 1.39, mil: 0.8, internet: 77.0, influence: 7.6, position: 'Permissive' }
+        ];
+
+        function init() {
+            updateAllDisplays();
+            document.getElementById('episodeLength').addEventListener('input', function(e) {
+                state.episodeLength = parseInt(e.target.value);
+                document.getElementById('episodeLengthValue').textContent = `${state.episodeLength} rounds`;
+                updateEpisodeProgress();
+            });
+        }
+
+        function openScenarioModal() {
+            document.getElementById('scenarioModal').classList.add('active');
+        }
+
+        function closeScenarioModal() {
+            document.getElementById('scenarioModal').classList.remove('active');
+        }
+
+        function selectScenario(element, short, title, subtitle, brief) {
+            document.querySelectorAll('.scenario-option').forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+
+            state.scenario = { short, title, subtitle, brief };
+
+            document.getElementById('currentScenario').textContent = short;
+            document.querySelector('.scenario-title').textContent = title;
+            document.querySelector('.scenario-subtitle').textContent = subtitle;
+            document.querySelector('.scenario-brief').textContent = brief;
+
+            setTimeout(() => closeScenarioModal(), 300);
+        }
+
+        function openCountryModal(slot) {
+            state.currentModalSlot = slot;
+            document.getElementById('countrySlot').textContent = slot;
+
+            const grid = document.getElementById('countryGrid');
+            grid.innerHTML = '';
+
+            countries.forEach(country => {
+                const div = document.createElement('div');
+                div.className = 'country-option';
+                if ((slot === 'A' && country.name === state.countryA.name) ||
+                    (slot === 'B' && country.name === state.countryB.name)) {
+                    div.classList.add('selected');
+                    state.tempCountry = country;
+                }
+                div.innerHTML = `
+                    <div class="country-option-flag">${country.flag}</div>
+                    <div class="country-option-name">${country.name}</div>
+                `;
+                div.onclick = function() {
+                    document.querySelectorAll('.country-option').forEach(opt => opt.classList.remove('selected'));
+                    div.classList.add('selected');
+                    state.tempCountry = country;
+                };
+                grid.appendChild(div);
+            });
+
+            const currentRole = slot === 'A' ? state.countryA.role : state.countryB.role;
+            state.tempRole = currentRole;
+            document.querySelectorAll('.role-option').forEach(opt => {
+                opt.classList.remove('selected');
+                if (opt.textContent === currentRole) {
+                    opt.classList.add('selected');
+                }
+            });
+
+            document.getElementById('countryModal').classList.add('active');
+        }
+
+        function closeCountryModal() {
+            document.getElementById('countryModal').classList.remove('active');
+        }
+
+        function selectRole(element, role) {
+            document.querySelectorAll('.role-option').forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+            state.tempRole = role;
+        }
+
+        function confirmCountrySelection() {
+            if (!state.tempCountry) return;
+
+            const slot = state.currentModalSlot;
+            const country = {
+                name: state.tempCountry.name,
+                flag: state.tempCountry.flag,
+                role: state.tempRole,
+                gdp: state.tempCountry.gdp,
+                mil: state.tempCountry.mil,
+                internet: state.tempCountry.internet,
+                influence: state.tempCountry.influence,
+                position: state.tempCountry.position
+            };
+
+            if (slot === 'A') {
+                state.countryA = country;
+            } else {
+                state.countryB = country;
+            }
+
+            updateAllDisplays();
+            closeCountryModal();
+        }
+
+        function nextRound() {
+            state.round++;
+
+            if (state.stochastic) {
+                state.reward = Math.max(0, Math.min(100, state.reward + (Math.random() - 0.5) * 20));
+                state.risk = Math.max(0, Math.min(100, state.risk + (Math.random() - 0.5) * 15));
+                state.tension = Math.max(0, Math.min(100, state.tension + (Math.random() - 0.5) * 10));
+                state.confidence = Math.max(0, Math.min(100, state.confidence + (Math.random() - 0.5) * 8));
+                state.alignment = Math.max(0, Math.min(100, state.alignment + (Math.random() - 0.5) * 12));
+            } else {
+                state.reward += (Math.random() - 0.3) * 8;
+                state.risk += (Math.random() - 0.6) * 6;
+                state.tension += (Math.random() - 0.5) * 5;
+                state.confidence += (Math.random() - 0.4) * 4;
+                state.alignment += Math.random() * 10;
+            }
+
+            state.reward = Math.max(0, Math.min(100, state.reward));
+            state.risk = Math.max(0, Math.min(100, state.risk));
+            state.tension = Math.max(0, Math.min(100, state.tension));
+            state.confidence = Math.max(0, Math.min(100, state.confidence));
+            state.alignment = Math.max(0, Math.min(100, state.alignment));
+
+            state.history.push({
+                round: state.round,
+                reward: state.reward,
+                risk: state.risk,
+                tension: state.tension,
+                confidence: state.confidence
+            });
+
+            if (Math.random() < 0.1) {
+                triggerShockEvent();
+            } else {
+                hideShockEvent();
+            }
+
+            updateAllDisplays();
+            addTimelineEntry();
+        }
+
+        function resetEpisode() {
+            if (confirm('Reset the entire episode? All progress will be lost.')) {
+                state.round = 1;
+                state.reward = 29.0;
+                state.risk = 50.0;
+                state.tension = 38.5;
+                state.confidence = 88.5;
+                state.alignment = 0;
+                state.history = [];
+                state.shocksTriggered = 0;
+
+                document.getElementById('roundTimeline').innerHTML = `
+                    <div class="timeline-item">
+                        <div class="timeline-round">Round 1</div>
+                        <div class="timeline-content">
+                            Initial policy positions established. Moderate tension between ${state.countryA.name}'s governance approach and ${state.countryB.name}'s regulatory framework.
+                        </div>
+                    </div>
+                `;
+
+                hideShockEvent();
+                updateAllDisplays();
+            }
+        }
+
+        function toggleStochastic() {
+            state.stochastic = !state.stochastic;
+            const toggle = document.getElementById('stochasticToggle');
+            if (state.stochastic) {
+                toggle.classList.add('active');
+            } else {
+                toggle.classList.remove('active');
+            }
+        }
+
+        function triggerShockEvent() {
+            state.shocksTriggered++;
+            const shockEvents = [
+                {
+                    title: "💥 EXTERNAL SHOCK: Trade Embargo Announced",
+                    content: "Major economy announces sudden export restrictions on critical AI components. Supply chain disruption imminent."
+                },
+                {
+                    title: "💥 REAL-WORLD TRIGGERED SHOCK: Cyber Attack",
+                    content: "Large-scale cyber incident targeting AI research infrastructure. International response coordination required."
+                },
+                {
+                    title: "💥 EXTERNAL SHOCK: Regulatory Framework Shift",
+                    content: "Unexpected regulatory announcement by coalition of nations. Policy harmonization window closing."
+                },
+                {
+                    title: "💥 EXTERNAL SHOCK: Breakthrough Technology",
+                    content: "Unexpected AI capability demonstration shifts strategic landscape. Competitive dynamics altered."
+                }
+            ];
+
+            const shock = shockEvents[Math.floor(Math.random() * shockEvents.length)];
+            document.getElementById('shockTitle').textContent = shock.title.replace('💥 ', '');
+            document.getElementById('shockContent').textContent = shock.content;
+            document.getElementById('shockAlert').style.display = 'block';
+
+            state.risk += 15;
+            state.tension += 10;
+            state.confidence -= 8;
+        }
+
+        function hideShockEvent() {
+            document.getElementById('shockAlert').style.display = 'none';
+        }
+
+        function updateAllDisplays() {
+            document.getElementById('roundNumber').textContent = state.round;
+
+            document.getElementById('rewardValue').textContent = state.reward.toFixed(1);
+            document.getElementById('riskValue').textContent = state.risk.toFixed(1);
+            document.getElementById('rewardBar').style.width = state.reward + '%';
+            document.getElementById('riskBar').style.width = state.risk + '%';
+
+            document.getElementById('tensionValue').textContent = state.tension.toFixed(1) + '%';
+            document.getElementById('confidenceValue').textContent = state.confidence.toFixed(1) + '%';
+            document.getElementById('alignmentValue').textContent = Math.floor(state.alignment) + '%';
+
+            const tensionIcon = document.getElementById('tensionIcon');
+            if (state.tension > 70) tensionIcon.textContent = '🔴';
+            else if (state.tension > 40) tensionIcon.textContent = '🟡';
+            else tensionIcon.textContent = '🟢';
+
+            document.getElementById('countryAFlag').textContent = state.countryA.flag;
+            document.getElementById('countryAName').textContent = state.countryA.name;
+            document.getElementById('countryARole').textContent = state.countryA.role;
+
+            document.getElementById('countryBFlag').textContent = state.countryB.flag;
+            document.getElementById('countryBName').textContent = state.countryB.name;
+            document.getElementById('countryBRole').textContent = state.countryB.role;
+
+            document.getElementById('playerCountry').textContent = state.player === 'A' ? state.countryA.name : state.countryB.name;
+
+            document.getElementById('comparisonHeaderA').textContent = state.countryA.name;
+            document.getElementById('comparisonHeaderB').textContent = state.countryB.name;
+            document.getElementById('gdpA').textContent = `$${state.countryA.gdp.toFixed(2)}T`;
+            document.getElementById('gdpB').textContent = `$${state.countryB.gdp.toFixed(2)}T`;
+            document.getElementById('milA').textContent = `${state.countryA.mil.toFixed(1)}%`;
+            document.getElementById('milB').textContent = `${state.countryB.mil.toFixed(1)}%`;
+            document.getElementById('internetA').textContent = `${state.countryA.internet.toFixed(1)}%`;
+            document.getElementById('internetB').textContent = `${state.countryB.internet.toFixed(1)}%`;
+            document.getElementById('influenceA').textContent = state.countryA.influence.toFixed(1);
+            document.getElementById('influenceB').textContent = state.countryB.influence.toFixed(1);
+            document.getElementById('positionA').textContent = state.countryA.position;
+            document.getElementById('positionB').textContent = state.countryB.position;
+
+            document.getElementById('deceptionCountryA').textContent = `${state.countryA.flag} ${state.countryA.name}`;
+            document.getElementById('deceptionCountryB').textContent = `${state.countryB.flag} ${state.countryB.name}`;
+
+            updateEpisodeProgress();
+            updateHistoryStats();
+        }
+
+        function updateEpisodeProgress() {
+            const progress = ((state.round - 1) % state.episodeLength) + 1;
+            document.getElementById('episodeProgress').textContent = `${progress}/${state.episodeLength}`;
+            document.getElementById('episodeBar').style.width = (progress / state.episodeLength * 100) + '%';
+        }
+
+        function updateHistoryStats() {
+            if (state.history.length > 0) {
+                const avgReward = state.history.reduce((sum, h) => sum + h.reward, 0) / state.history.length;
+                const avgRisk = state.history.reduce((sum, h) => sum + h.risk, 0) / state.history.length;
+
+                document.getElementById('avgReward').textContent = avgReward.toFixed(1);
+                document.getElementById('avgRisk').textContent = avgRisk.toFixed(1);
+            } else {
+                document.getElementById('avgReward').textContent = state.reward.toFixed(1);
+                document.getElementById('avgRisk').textContent = state.risk.toFixed(1);
+            }
+
+            document.getElementById('roundsPlayed').textContent = state.round;
+            document.getElementById('shocksTriggered').textContent = state.shocksTriggered;
+        }
+
+        function addTimelineEntry() {
+            const timeline = document.getElementById('roundTimeline');
+
+            const narratives = [
+                `Policy alignment improving between ${state.countryA.name} and ${state.countryB.name}. Cooperative signals strengthening.`,
+                `Tension escalating in bilateral negotiations. Divergent strategic priorities detected.`,
+                `${state.countryA.name}'s ${state.countryA.role} approach creating friction with ${state.countryB.name}'s position.`,
+                `Breakthrough in stakeholder coordination. Risk mitigation strategies proving effective.`,
+                `Strategic ambiguity detected. Deception indicators elevated for one or more actors.`,
+                `Coalition dynamics shifting. Multi-lateral considerations becoming dominant factor.`,
+                `Compliance frameworks showing strain. Recommend immediate policy adjustment protocols.`,
+                `Alignment metrics improving significantly. Reward optimization trajectory enhanced.`
+            ];
+
+            const narrative = narratives[Math.floor(Math.random() * narratives.length)];
+
+            const entry = document.createElement('div');
+            entry.className = 'timeline-item';
+            entry.innerHTML = `
+                <div class="timeline-round">Round ${state.round}</div>
+                <div class="timeline-content">${narrative}</div>
+            `;
+
+            timeline.appendChild(entry);
+            timeline.scrollTop = timeline.scrollHeight;
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
